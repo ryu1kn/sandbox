@@ -1,5 +1,5 @@
 {
-  "name": "test--rxjs",
+  "name": "rxjs",
   "version": "0.0.0",
   "description": "RxJS test",
   "main": "app.js",
