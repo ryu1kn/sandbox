@@ -22,16 +22,6 @@ describe('RxJS', () => {
     source.subscribe(observer);
   });
 
-  it('propagates an error synchronously (but what are the cases?)', () => {
-    const source = Rx.Observable.from([1, 2, 3]);
-    const observer = Rx.Observer.create(
-      _ => { throw new Error('ERROR IN onNext'); }
-    );
-    expect(() => {
-      source.subscribe(observer);
-    }).throws(Error, 'ERROR IN onNext');
-  });
-
   it('calls `onError` with the error thrown in the sequence', done => {
     const source = Rx.Observable.from([1, 2, 3]);
     const events = [];
@@ -41,12 +31,23 @@ describe('RxJS', () => {
         expect(e).to.be.an('Error');
         expect(e.message).to.eql('ERROR');
         done();
-      },
-      _ => {}
+      }
     );
     source
       .map(() => { throw new Error('ERROR'); })
       .subscribe(observer);
+  });
+
+  it('does not call `onError` for an error thrown in `onNext`', () => {
+    const source = Rx.Observable.from([1, 2, 3]);
+    const events = [];
+    const observer = Rx.Observer.create(
+      num => { if (num === 2) throw new Error('ERROR IN onNext'); },
+      _ => { throw new new Error('Should not be called'); }
+    );
+    expect(() => {
+      source.subscribe(observer);
+    }).throws(Error, 'ERROR IN onNext');
   });
 
   it('will not call `onCompleted` if an error occurred', done => {
@@ -64,7 +65,21 @@ describe('RxJS', () => {
       .subscribe(observer);
   });
 
-  it('replays all events for each observer!', done => {
+  it.skip('cannot catch an error that occurred in `onNext` for an asynchronous event', done => {
+    const source = Rx.Observable.create(observer => {
+      const events = [1, 2, 3];
+      const intervalId = setInterval(() => {
+        observer.onNext(events.shift());
+      }, 100);
+      return () => clearInterval(intervalId);
+    });
+    const observer = Rx.Observer.create(
+      num => { console.log(num); if (num % 2 === 0) throw new Error('ERROR IN onNext'); }
+    );
+    source.subscribe(observer);
+  });
+
+  it('plays all events for each observer', done => {
     const source = Rx.Observable.from([1, 2, 3]);
     const events1 = [];
     const events2 = [];
@@ -87,3 +102,5 @@ describe('RxJS', () => {
   it('will halt the sequence and not call onCompleted if an error is thrown in the sequence');
 
 });
+
+function noop() {}
