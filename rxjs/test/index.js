@@ -74,7 +74,7 @@ describe('RxJS', () => {
       return () => clearInterval(intervalId);
     });
     const observer = Rx.Observer.create(
-      num => { console.log(num); if (num % 2 === 0) throw new Error('ERROR IN onNext'); }
+      num => { if (num % 2 === 0) throw new Error('ERROR IN onNext'); }
     );
     source.subscribe(observer);
   });
@@ -98,8 +98,6 @@ describe('RxJS', () => {
     );
     source.subscribe(observer1);
   });
-
-  it('will halt the sequence and not call onCompleted if an error is thrown in the sequence');
 
 });
 
